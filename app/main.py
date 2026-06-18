@@ -1,7 +1,16 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.deps import get_db
+from app.api.deps import get_db
+from app.database.connection import engine, Base
+
+# IMPORTANTE: O SQLAlchemy precisa desses imports para mapear o banco
+from app.models.user import User
+from app.models.project import Project
+from app.models.task import Task
+
+# Cria as tabelas fisicamente no PostgreSQL se não existirem
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TaskFlow API")
 
