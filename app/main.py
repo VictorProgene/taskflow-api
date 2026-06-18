@@ -21,18 +21,16 @@ def root():
 @app.get("/test-db")
 def test_db(db: Session = Depends(get_db)):
     try:
-        # Executa um comando simples SQL para testar a comunicação
-        result = db.execute(text("SELECT 1"))
-        row = result.fetchone()
+        # Em vez de SELECT 1, vamos testar se a tabela 'users' realmente existe no banco
+        result = db.execute(text("SELECT * FROM tasks"))
         return {
             "status": "sucesso",
             "conexao": "PostgreSQL operacional",
-            "resultado": row[0] if row else None
+            "mensagem": "Tabelas validadas com sucesso no banco de dados! 🏁"
         }
     except Exception as e:
-        # Se der erro, ele não vai dar apenas "Internal Server Error", ele vai te dizer o porquê
         return {
             "status": "erro",
-            "mensagem": "Não foi possível conectar ao banco de dados.",
+            "mensagem": "Erro ao ler as tabelas. Elas podem não ter sido criadas.",
             "detalhes": str(e)
         }
