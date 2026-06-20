@@ -14,5 +14,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # ➕ A sua API conectada perfeitamente ao seu banco atual:
+  web:
+    build: .
+    container_name: taskflow_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # Usando 'db' (nome do serviço) e as suas credenciais exatas: admin e taskflow_db
+      DATABASE_URL: postgresql://postgres:admin@db:5432/taskflow_db
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
