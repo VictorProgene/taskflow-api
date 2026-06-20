@@ -1,58 +1,65 @@
 from fastapi import FastAPI, Depends, Request, status
-from fastapi.responses import JSONResponse # Se preferir manter simples, use JSONResponse
-from sqlalchemy.exc import SQLAlchemyError  # Captura qualquer erro de banco de dados
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_user
 from app.database.connection import engine, Base
 
-# Import dos Roteadores da API
-from app.api.deps import get_current_user
+# API Routers Import
 from app.api.auth import router as auth_router
 from app.api.project import router as project_router
 from app.api.task import router as task_router
 
-# IMPORTANTE: O SQLAlchemy precisa desses imports para mapear o banco
+# Model mapping for SQLAlchemy
 from app.models.user import User
 from app.models.project import Project
 from app.models.task import Task
 
-# Cria as tabelas fisicamente no PostgreSQL se não existirem
+# Physically create tables in PostgreSQL if they do not exist
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TaskFlow API")
 
+# CORS configuration to allow your local frontend
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allows all headers (including Authorization for the Token)
+)
+
 @app.exception_handler(SQLAlchemyError)
 def database_exception_handler(request: Request, exc: SQLAlchemyError):
     """
-    Se houver qualquer erro de banco de dados (ex: perda de conexão, dados corrompidos),
-    este interceptador captura o erro e envia uma resposta amigável para o cliente.
+    Captures any database error and sends a friendly response to the client.
     """
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Ocorreu um erro interno de comunicação com o banco de dados. Tente novamente mais tarde."}
+        content={"detail": "An internal database communication error occurred. Please try again later."}
     )
 
-# Inclui as rotas de autenticação sob o prefixo /auth
+# Include API routers
 app.include_router(auth_router)
 app.include_router(project_router)
 app.include_router(task_router)
 
 @app.get("/")
 def root():
-    return {"message": "TaskFlow API rodando com sucesso! 🚀"}
-
-# ... seus outros imports ...
-from app.api.deps import get_current_user
-from app.models.user import User
-
-# ... configuração do app e include_router ...
+    return {"message": "TaskFlow API running successfully! 🚀"}
 
 @app.get("/users/me")
 def read_users_me(current_user: User = Depends(get_current_user)):
-    """Rota protegida que só responde se um Token JWT válido for enviado."""
+    """Protected route that only responds if a valid JWT Token is provided."""
     return {
-        "message": "Você está autenticado!",
+        "message": "You are authenticated!",
         "user_email": current_user.email,
         "user_id": current_user.id
     }
