@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from app.api.deps import get_db
 from app.models.user import User
+from app.schemas.user import Token
 from app.schemas.user import UserCreate, Token
 from app.core.security import generate_password_hash, verify_password
 from app.core.jwt import create_access_token
@@ -38,10 +40,10 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(credentials: UserCreate, db: Session = Depends(get_db)):
+def login(credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """Rota de login que valida as credenciais e retorna o Token JWT."""
     # Busca o usuário pelo e-mail
-    stmt = select(User).where(User.email == credentials.email)
+    stmt = select(User).where(User.email == credentials.username)
     user = db.execute(stmt).scalar_one_or_none()
 
     # Se o usuário não existir ou a senha estiver incorreta
