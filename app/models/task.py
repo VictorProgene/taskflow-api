@@ -10,6 +10,7 @@ class Task(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     status = Column(String, default="pending")  # Estados: pending, in_progress, done
+    priority = Column(String, default="medium", nullable=False)
 
     # Chave Estrangeira: Aponta para o projeto ao qual esta tarefa pertence
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
