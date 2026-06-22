@@ -22,10 +22,11 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TaskFlow API")
 
-# CORS configuration to allow your local frontend
+# CORS configuration to allow your local frontend and online frontend
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://taskflow-frontend-production-d2cd.up.railway.app", # ADICIONE ESTA LINHA
 ]
 
 app.add_middleware(
